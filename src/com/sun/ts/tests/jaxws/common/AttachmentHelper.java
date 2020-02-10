@@ -29,11 +29,16 @@ import java.util.*;
 import java.io.*;
 import java.net.URL;
 import java.awt.image.*;
+
 import javax.xml.soap.AttachmentPart;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
 import javax.activation.DataHandler;
 import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
 
 import org.w3c.dom.Element;
 
@@ -407,15 +412,23 @@ public class AttachmentHelper {
     ArrayList alActual = null;
     TestUtil.logMsg(
         "Verifying data of attachment matches: [" + whichAttachment + "]");
+    
     if (actualDoc != null) {
       try {
         TestUtil.logMsg("Transform actual XML document to a DOMResult");
         DOMResult dr = JAXWS_Util.getSourceAsDOMResult(actualDoc);
         XMLUtils.startCapturedResults();
+        StringWriter sw = new StringWriter();
+        Transformer t = TransformerFactory.newInstance().newTransformer();
+        t.transform(new DOMSource(dr.getNode()), new StreamResult(sw));
+        TestUtil.logMsg("---------------ActualDoc xml Node Content----------------");
+        TestUtil.logMsg(sw.toString());
+        TestUtil.logMsg("----------------------------------------------------------");
         XMLUtils.xmlDumpDOMNodes(dr.getNode());
         alActual = XMLUtils.getCapturedResults();
         XMLUtils.stopCapturedResults();
       } catch (Exception e) {
+        e.printStackTrace();
         TestUtil.logMsg("Transform failed with exception: " + e.getMessage());
         result.append("FAILURE: " + whichAttachment
             + " actual XML document was malformed (unexpected)");
@@ -674,3 +687,4 @@ public class AttachmentHelper {
     return count;
   }
 }
+
